@@ -100,6 +100,51 @@ const products = [
 
 const categories = ["All", "Bags", "Belts", "Footwear", "Wallets"];
 
+const stylingCatalogues = [
+  {
+    id: "classic-executive",
+    title: "Classic Executive",
+    category: "Office / Formal",
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=900&auto=format&fit=crop",
+    note: "Briefcases, structured totes, black and brown leather.",
+  },
+  {
+    id: "travel-heritage",
+    title: "Travel Heritage",
+    category: "Travel",
+    image: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=900&auto=format&fit=crop",
+    note: "Duffels, weekend bags, chestnut leather, vintage brass details.",
+  },
+  {
+    id: "minimal-luxury",
+    title: "Minimal Luxury",
+    category: "Daily Carry",
+    image: "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?q=80&w=900&auto=format&fit=crop",
+    note: "Clean silhouettes, tote bags, wallets, subtle premium styling.",
+  },
+  {
+    id: "evening-noir",
+    title: "Evening Noir",
+    category: "Premium Event",
+    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=900&auto=format&fit=crop",
+    note: "Dark leather, statement bags, party and luxury occasion styling.",
+  },
+  {
+    id: "footwear-atelier",
+    title: "Footwear Atelier",
+    category: "Shoes / Loafers",
+    image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?q=80&w=900&auto=format&fit=crop",
+    note: "Loafers, formal shoes, hand-polished wine and black tones.",
+  },
+  {
+    id: "gift-edit",
+    title: "Gift Edit",
+    category: "Wallets / Card Holders",
+    image: "https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=900&auto=format&fit=crop",
+    note: "Wallets, card holders, small leather goods, gifting choices.",
+  },
+];
+
 function formatPrice(value) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -131,6 +176,7 @@ export default function LuxuryLeatherWebsite() {
     email: "",
     preference: "Bags",
     message: "",
+    catalogue: "classic-executive",
   });
   const [customer, setCustomer] = useState({
     name: "",
@@ -186,8 +232,8 @@ export default function LuxuryLeatherWebsite() {
   };
 
   const submitStylingRequest = () => {
-    if (!stylingForm.name || !stylingForm.phone || !stylingForm.email) {
-      alert("Please enter your name, phone number, and email for the private styling request.");
+    if (!stylingForm.name || !stylingForm.phone || !stylingForm.email || !stylingForm.catalogue) {
+      alert("Please enter your name, phone number, email, and choose one catalogue.");
       return;
     }
     setStylingSuccess(true);
@@ -532,6 +578,34 @@ export default function LuxuryLeatherWebsite() {
                   <Button onClick={() => setStylingOpen(false)} className="mt-8 rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]">Back to Store</Button>
                 </div>
               ) : (
+                <>
+                <div className="mt-6">
+                  <p className="text-sm uppercase tracking-[0.3em] text-[#d7b56d]">Choose a Catalogue</p>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {stylingCatalogues.map((catalogue) => (
+                      <button
+                        key={catalogue.id}
+                        onClick={() => handleStylingChange("catalogue", catalogue.id)}
+                        className={`overflow-hidden rounded-[1.5rem] border text-left transition hover:-translate-y-1 ${
+                          stylingForm.catalogue === catalogue.id
+                            ? "border-[#d7b56d] bg-[#d7b56d]/15"
+                            : "border-[#d7b56d]/15 bg-white/[0.04] hover:border-[#d7b56d]/45"
+                        }`}
+                      >
+                        <img src={catalogue.image} alt={catalogue.title} className="h-32 w-full object-cover" />
+                        <div className="p-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <h4 className="font-serif text-xl">{catalogue.title}</h4>
+                            <span className={`h-4 w-4 rounded-full border ${stylingForm.catalogue === catalogue.id ? "border-[#d7b56d] bg-[#d7b56d]" : "border-[#f8efe2]/30"}`} />
+                          </div>
+                          <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#d7b56d]">{catalogue.category}</p>
+                          <p className="mt-2 text-xs leading-5 text-[#f8efe2]/55">{catalogue.note}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   <input value={stylingForm.name} onChange={(e) => handleStylingChange("name", e.target.value)} placeholder="Full Name" className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d]" />
                   <input value={stylingForm.phone} onChange={(e) => handleStylingChange("phone", e.target.value)} placeholder="Phone Number" className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d]" />
@@ -544,8 +618,12 @@ export default function LuxuryLeatherWebsite() {
                     <option className="bg-[#0f0d0a]">Custom Order</option>
                   </select>
                   <textarea value={stylingForm.message} onChange={(e) => handleStylingChange("message", e.target.value)} placeholder="Tell us your preferred style, color, budget, or custom requirement" rows={5} className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d] sm:col-span-2" />
+                  <p className="rounded-2xl border border-[#d7b56d]/15 bg-[#d7b56d]/10 px-4 py-3 text-sm text-[#f8efe2]/65 sm:col-span-2">
+                    Selected catalogue: <span className="text-[#d7b56d]">{stylingCatalogues.find((item) => item.id === stylingForm.catalogue)?.title}</span>
+                  </p>
                   <Button onClick={submitStylingRequest} className="mt-2 rounded-full bg-[#d7b56d] py-6 text-black hover:bg-[#efd188] sm:col-span-2">Submit Styling Request</Button>
                 </div>
+                </>
               )}
             </motion.div>
           </motion.div>
