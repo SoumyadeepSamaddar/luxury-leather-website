@@ -170,6 +170,15 @@ export default function LuxuryLeatherWebsite() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [stylingOpen, setStylingOpen] = useState(false);
   const [stylingSuccess, setStylingSuccess] = useState(false);
+  const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [selectedCatalogue, setSelectedCatalogue] = useState(stylingCatalogues[0]);
+  const [customOptions, setCustomOptions] = useState({
+    leatherColor: "Cognac Brown",
+    hardware: "Antique Gold",
+    monogram: "",
+    lining: "Suede Beige",
+    budget: "₹10,000 - ₹20,000",
+  });
   const [stylingForm, setStylingForm] = useState({
     name: "",
     phone: "",
@@ -229,6 +238,28 @@ export default function LuxuryLeatherWebsite() {
 
   const handleStylingChange = (field, value) => {
     setStylingForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCustomOptionChange = (field, value) => {
+    setCustomOptions((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const openCatalogueCustomizer = (catalogue) => {
+    setSelectedCatalogue(catalogue);
+    setStylingForm((prev) => ({ ...prev, catalogue: catalogue.id }));
+    setStylingOpen(false);
+    setCustomizerOpen(true);
+  };
+
+  const continueToStylingForm = () => {
+    setCustomizerOpen(false);
+    setStylingOpen(true);
+    setStylingSuccess(false);
+    setStylingForm((prev) => ({
+      ...prev,
+      catalogue: selectedCatalogue.id,
+      message: `Catalogue: ${selectedCatalogue.title}. Leather color: ${customOptions.leatherColor}. Hardware: ${customOptions.hardware}. Lining: ${customOptions.lining}. Budget: ${customOptions.budget}. Monogram: ${customOptions.monogram || "Not selected"}.`,
+    }));
   };
 
   const submitStylingRequest = () => {
@@ -585,7 +616,7 @@ export default function LuxuryLeatherWebsite() {
                     {stylingCatalogues.map((catalogue) => (
                       <button
                         key={catalogue.id}
-                        onClick={() => handleStylingChange("catalogue", catalogue.id)}
+                        onClick={() => openCatalogueCustomizer(catalogue)}
                         className={`overflow-hidden rounded-[1.5rem] border text-left transition hover:-translate-y-1 ${
                           stylingForm.catalogue === catalogue.id
                             ? "border-[#d7b56d] bg-[#d7b56d]/15"
@@ -626,6 +657,97 @@ export default function LuxuryLeatherWebsite() {
                 </>
               )}
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {customizerOpen && selectedCatalogue && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] overflow-y-auto bg-[#080604] text-[#f8efe2]">
+            <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(215,181,109,.18),transparent_28%),linear-gradient(135deg,#080604,#17130f_55%,#080604)] px-5 py-8">
+              <div className="mx-auto max-w-7xl">
+                <div className="flex items-center justify-between border-b border-[#d7b56d]/15 pb-5">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.4em] text-[#d7b56d]">Customization Studio</p>
+                    <h2 className="mt-2 font-serif text-4xl md:text-6xl">{selectedCatalogue.title}</h2>
+                  </div>
+                  <button onClick={() => setCustomizerOpen(false)} className="rounded-full border border-[#d7b56d]/30 p-3 hover:bg-[#d7b56d]/10"><X /></button>
+                </div>
+
+                <div className="mt-10 grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+                  <div className="overflow-hidden rounded-[2.5rem] border border-[#d7b56d]/20 bg-white/[0.04] shadow-2xl">
+                    <img src={selectedCatalogue.image} alt={selectedCatalogue.title} className="h-[440px] w-full object-cover" />
+                    <div className="p-6">
+                      <p className="text-xs uppercase tracking-[0.28em] text-[#d7b56d]">{selectedCatalogue.category}</p>
+                      <p className="mt-3 leading-7 text-[#f8efe2]/65">{selectedCatalogue.note}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[2.5rem] border border-[#d7b56d]/20 bg-[#0f0d0a]/80 p-6 backdrop-blur-xl">
+                    <h3 className="font-serif text-3xl">Personalise Your Selection</h3>
+                    <p className="mt-2 text-[#f8efe2]/60">Choose premium options before submitting your private consultation request.</p>
+
+                    <div className="mt-7 space-y-6">
+                      <div>
+                        <p className="mb-3 text-sm uppercase tracking-[0.25em] text-[#d7b56d]">Leather Colour</p>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          {["Cognac Brown", "Midnight Black", "Wine Brown", "Chestnut", "Tan", "Forest Green"].map((item) => (
+                            <button key={item} onClick={() => handleCustomOptionChange("leatherColor", item)} className={`rounded-2xl border px-4 py-3 text-sm transition ${customOptions.leatherColor === item ? "border-[#d7b56d] bg-[#d7b56d]/15 text-[#d7b56d]" : "border-[#d7b56d]/15 bg-white/[0.03] text-[#f8efe2]/65 hover:border-[#d7b56d]/40"}`}>{item}</button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="mb-3 text-sm uppercase tracking-[0.25em] text-[#d7b56d]">Hardware Finish</p>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          {["Antique Gold", "Polished Silver", "Matte Black"].map((item) => (
+                            <button key={item} onClick={() => handleCustomOptionChange("hardware", item)} className={`rounded-2xl border px-4 py-3 text-sm transition ${customOptions.hardware === item ? "border-[#d7b56d] bg-[#d7b56d]/15 text-[#d7b56d]" : "border-[#d7b56d]/15 bg-white/[0.03] text-[#f8efe2]/65 hover:border-[#d7b56d]/40"}`}>{item}</button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <p className="mb-3 text-sm uppercase tracking-[0.25em] text-[#d7b56d]">Inner Lining</p>
+                          <select value={customOptions.lining} onChange={(e) => handleCustomOptionChange("lining", e.target.value)} className="w-full rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none focus:border-[#d7b56d]">
+                            <option className="bg-[#0f0d0a]">Suede Beige</option>
+                            <option className="bg-[#0f0d0a]">Royal Maroon</option>
+                            <option className="bg-[#0f0d0a]">Classic Black</option>
+                            <option className="bg-[#0f0d0a]">Satin Brown</option>
+                          </select>
+                        </div>
+                        <div>
+                          <p className="mb-3 text-sm uppercase tracking-[0.25em] text-[#d7b56d]">Budget Range</p>
+                          <select value={customOptions.budget} onChange={(e) => handleCustomOptionChange("budget", e.target.value)} className="w-full rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none focus:border-[#d7b56d]">
+                            <option className="bg-[#0f0d0a]">₹5,000 - ₹10,000</option>
+                            <option className="bg-[#0f0d0a]">₹10,000 - ₹20,000</option>
+                            <option className="bg-[#0f0d0a]">₹20,000 - ₹35,000</option>
+                            <option className="bg-[#0f0d0a]">₹35,000+</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="mb-3 text-sm uppercase tracking-[0.25em] text-[#d7b56d]">Monogram / Initials</p>
+                        <input value={customOptions.monogram} onChange={(e) => handleCustomOptionChange("monogram", e.target.value)} maxLength={8} placeholder="Example: SS" className="w-full rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d]" />
+                      </div>
+
+                      <div className="rounded-[1.5rem] border border-[#d7b56d]/15 bg-[#d7b56d]/10 p-5">
+                        <h4 className="font-serif text-2xl">Your Customisation Summary</h4>
+                        <p className="mt-3 text-sm leading-7 text-[#f8efe2]/65">
+                          {selectedCatalogue.title} • {customOptions.leatherColor} • {customOptions.hardware} • {customOptions.lining} • {customOptions.budget} • Monogram: {customOptions.monogram || "Not selected"}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <Button onClick={() => setStylingOpen(true)} variant="outline" className="flex-1 rounded-full border-[#d7b56d]/40 bg-transparent py-6 text-[#f8efe2] hover:bg-[#d7b56d]/10">Back to Catalogues</Button>
+                        <Button onClick={continueToStylingForm} className="flex-1 rounded-full bg-[#d7b56d] py-6 text-black hover:bg-[#efd188]">Continue to Details</Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
