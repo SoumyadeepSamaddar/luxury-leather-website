@@ -123,6 +123,15 @@ export default function LuxuryLeatherWebsite() {
   const [quickView, setQuickView] = useState(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [stylingOpen, setStylingOpen] = useState(false);
+  const [stylingSuccess, setStylingSuccess] = useState(false);
+  const [stylingForm, setStylingForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    preference: "Bags",
+    message: "",
+  });
   const [customer, setCustomer] = useState({
     name: "",
     email: "",
@@ -170,6 +179,18 @@ export default function LuxuryLeatherWebsite() {
 
   const handleCustomerChange = (field, value) => {
     setCustomer((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleStylingChange = (field, value) => {
+    setStylingForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const submitStylingRequest = () => {
+    if (!stylingForm.name || !stylingForm.phone || !stylingForm.email) {
+      alert("Please enter your name, phone number, and email for the private styling request.");
+      return;
+    }
+    setStylingSuccess(true);
   };
 
   const openCheckout = () => {
@@ -255,6 +276,10 @@ export default function LuxuryLeatherWebsite() {
                 Explore Collection <ChevronRight size={18} />
               </Button>
               <Button
+                onClick={() => {
+                  setStylingOpen(true);
+                  setStylingSuccess(false);
+                }}
                 variant="outline"
                 className="rounded-full border-[#d7b56d]/50 bg-transparent px-8 py-6 text-[#f8efe2] hover:bg-[#d7b56d]/10"
               >
@@ -418,7 +443,15 @@ export default function LuxuryLeatherWebsite() {
             <p className="mt-4 leading-8 text-[#f8efe2]/65">
               Add personalization, monogramming, exclusive colors, concierge support, and custom product requests for a premium customer experience.
             </p>
-            <Button className="mt-8 rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]">Request Custom Order</Button>
+            <Button
+              onClick={() => {
+                setStylingOpen(true);
+                setStylingSuccess(false);
+              }}
+              className="mt-8 rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]"
+            >
+              Request Custom Order
+            </Button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {[
@@ -478,6 +511,46 @@ export default function LuxuryLeatherWebsite() {
       <footer className="relative z-10 border-t border-[#d7b56d]/15 px-5 py-10 text-center text-sm text-[#f8efe2]/50">
         © 2026 Velora Leather Maison. Premium e-commerce concept built with React, Tailwind, Framer Motion, GitHub, and Vercel.
       </footer>
+
+      <AnimatePresence>
+        {stylingOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[65] grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
+            <motion.div initial={{ y: 35, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 35, scale: 0.96 }} className="w-full max-w-3xl rounded-[2rem] border border-[#d7b56d]/25 bg-[#0f0d0a] p-6 text-[#f8efe2] shadow-2xl">
+              <div className="flex items-start justify-between gap-4 border-b border-[#d7b56d]/15 pb-5">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.35em] text-[#d7b56d]">Private Styling</p>
+                  <h3 className="mt-2 font-serif text-3xl">Book Your Leather Consultation</h3>
+                </div>
+                <button onClick={() => setStylingOpen(false)} className="rounded-full border border-[#d7b56d]/30 p-2 hover:bg-[#d7b56d]/10"><X /></button>
+              </div>
+
+              {stylingSuccess ? (
+                <div className="grid place-items-center py-14 text-center">
+                  <CheckCircle2 size={68} className="text-[#d7b56d]" />
+                  <h4 className="mt-6 font-serif text-4xl">Request Received</h4>
+                  <p className="mt-3 max-w-xl text-[#f8efe2]/65">Your private styling request has been submitted in demo mode. In a real project, connect this form to EmailJS, Firebase, Supabase, or your backend.</p>
+                  <Button onClick={() => setStylingOpen(false)} className="mt-8 rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]">Back to Store</Button>
+                </div>
+              ) : (
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <input value={stylingForm.name} onChange={(e) => handleStylingChange("name", e.target.value)} placeholder="Full Name" className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d]" />
+                  <input value={stylingForm.phone} onChange={(e) => handleStylingChange("phone", e.target.value)} placeholder="Phone Number" className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d]" />
+                  <input value={stylingForm.email} onChange={(e) => handleStylingChange("email", e.target.value)} placeholder="Email Address" className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d] sm:col-span-2" />
+                  <select value={stylingForm.preference} onChange={(e) => handleStylingChange("preference", e.target.value)} className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none focus:border-[#d7b56d] sm:col-span-2">
+                    <option className="bg-[#0f0d0a]">Bags</option>
+                    <option className="bg-[#0f0d0a]">Belts</option>
+                    <option className="bg-[#0f0d0a]">Footwear</option>
+                    <option className="bg-[#0f0d0a]">Wallets</option>
+                    <option className="bg-[#0f0d0a]">Custom Order</option>
+                  </select>
+                  <textarea value={stylingForm.message} onChange={(e) => handleStylingChange("message", e.target.value)} placeholder="Tell us your preferred style, color, budget, or custom requirement" rows={5} className="rounded-2xl border border-[#d7b56d]/20 bg-black/25 px-4 py-3 outline-none placeholder:text-[#f8efe2]/35 focus:border-[#d7b56d] sm:col-span-2" />
+                  <Button onClick={submitStylingRequest} className="mt-2 rounded-full bg-[#d7b56d] py-6 text-black hover:bg-[#efd188] sm:col-span-2">Submit Styling Request</Button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {quickView && (
