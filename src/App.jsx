@@ -1,6 +1,25 @@
 import React, { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Search, Heart, Star, X, Minus, Plus, ShieldCheck, Truck, CreditCard, Menu, ChevronRight, Lock, CheckCircle2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Award,
+  CheckCircle2,
+  ChevronRight,
+  CreditCard,
+  Crown,
+  Heart,
+  Lock,
+  Menu,
+  Minus,
+  PackageCheck,
+  Plus,
+  Search,
+  ShieldCheck,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  Truck,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -13,6 +32,7 @@ const products = [
     rating: 4.9,
     tag: "Bestseller",
     color: "Cognac",
+    material: "Full-grain leather",
     image: "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?q=80&w=1200&auto=format&fit=crop",
     desc: "Hand-finished full-grain leather tote with structured silhouette, brass hardware, and soft suede lining.",
   },
@@ -22,8 +42,9 @@ const products = [
     category: "Belts",
     price: 5990,
     rating: 4.8,
-    tag: "New",
+    tag: "New Arrival",
     color: "Black",
+    material: "Vegetable-tanned leather",
     image: "https://images.unsplash.com/photo-1624222247344-550fb60583dc?q=80&w=1200&auto=format&fit=crop",
     desc: "Minimal luxury belt crafted from vegetable-tanned Italian leather with a polished metal buckle.",
   },
@@ -35,6 +56,7 @@ const products = [
     rating: 5.0,
     tag: "Premium",
     color: "Midnight Black",
+    material: "Full-grain leather",
     image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200&auto=format&fit=crop",
     desc: "Professional briefcase with laptop compartment, hidden magnetic closure, and reinforced handle.",
   },
@@ -46,6 +68,7 @@ const products = [
     rating: 4.7,
     tag: "Limited",
     color: "Wine Brown",
+    material: "Hand-polished leather",
     image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?q=80&w=1200&auto=format&fit=crop",
     desc: "Elegant hand-polished loafers with cushioned sole and signature metal accent.",
   },
@@ -57,6 +80,7 @@ const products = [
     rating: 4.6,
     tag: "Gift Pick",
     color: "Tan",
+    material: "Pebbled leather",
     image: "https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1200&auto=format&fit=crop",
     desc: "Slim card holder with six slots, RFID protection, and embossed monogram option.",
   },
@@ -68,6 +92,7 @@ const products = [
     rating: 4.9,
     tag: "Travel",
     color: "Chestnut",
+    material: "Oil-pull leather",
     image: "https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=1200&auto=format&fit=crop",
     desc: "Weekend duffel with antique brass zippers, detachable shoulder strap, and spacious inner pocket.",
   },
@@ -76,8 +101,17 @@ const products = [
 const categories = ["All", "Bags", "Belts", "Footwear", "Wallets"];
 
 function formatPrice(value) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  show: { opacity: 1, y: 0 },
+};
 
 export default function LuxuryLeatherWebsite() {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -86,6 +120,7 @@ export default function LuxuryLeatherWebsite() {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [quickView, setQuickView] = useState(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [customer, setCustomer] = useState({
@@ -99,12 +134,39 @@ export default function LuxuryLeatherWebsite() {
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const categoryMatch = activeCategory === "All" || product.category === activeCategory;
-      const searchMatch = product.name.toLowerCase().includes(query.toLowerCase()) || product.category.toLowerCase().includes(query.toLowerCase());
+      const searchMatch =
+        product.name.toLowerCase().includes(query.toLowerCase()) ||
+        product.category.toLowerCase().includes(query.toLowerCase()) ||
+        product.color.toLowerCase().includes(query.toLowerCase());
       return categoryMatch && searchMatch;
     });
   }, [activeCategory, query]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const exists = prev.find((item) => item.id === product.id);
+      if (exists) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, qty: item.qty + 1 } : item
+        );
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
+    setCartOpen(true);
+  };
+
+  const updateQty = (id, change) => {
+    setCart((prev) =>
+      prev
+        .map((item) =>
+          item.id === id ? { ...item, qty: Math.max(0, item.qty + change) } : item
+        )
+        .filter((item) => item.qty > 0)
+    );
+  };
 
   const handleCustomerChange = (field, value) => {
     setCustomer((prev) => ({ ...prev, [field]: value }));
@@ -122,172 +184,330 @@ export default function LuxuryLeatherWebsite() {
       alert("Please fill all customer details before payment.");
       return;
     }
-
     setPaymentSuccess(true);
     setCart([]);
   };
 
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const exists = prev.find((item) => item.id === product.id);
-      if (exists) return prev.map((item) => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
-      return [...prev, { ...product, qty: 1 }];
-    });
-    setCartOpen(true);
-  };
-
-  const updateQty = (id, change) => {
-    setCart((prev) =>
-      prev
-        .map((item) => item.id === id ? { ...item, qty: Math.max(0, item.qty + change) } : item)
-        .filter((item) => item.qty > 0)
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-[#0f0d0a] text-[#f8efe2]">
-      <header className="sticky top-0 z-40 border-b border-[#d7b56d]/20 bg-[#0f0d0a]/90 backdrop-blur-xl">
+    <div className="min-h-screen overflow-hidden bg-[#080604] text-[#f8efe2]">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_20%_10%,rgba(215,181,109,.16),transparent_28%),radial-gradient(circle_at_90%_20%,rgba(112,52,22,.22),transparent_24%),linear-gradient(180deg,#080604,#120d09_45%,#080604)]" />
+
+      <header className="sticky top-0 z-40 border-b border-[#d7b56d]/15 bg-[#080604]/85 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
           <div className="flex items-center gap-3">
-            <button className="lg:hidden" onClick={() => setMenuOpen(!menuOpen)}><Menu /></button>
+            <button className="lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+              <Menu />
+            </button>
             <div>
-              <h1 className="font-serif text-2xl tracking-[0.35em] text-[#d7b56d]">VELORA</h1>
-              <p className="text-xs uppercase tracking-[0.35em] text-[#f8efe2]/50">Leather Maison</p>
+              <h1 className="font-serif text-2xl tracking-[0.38em] text-[#d7b56d]">VELORA</h1>
+              <p className="text-[10px] uppercase tracking-[0.38em] text-[#f8efe2]/45">Leather Maison</p>
             </div>
           </div>
-          <nav className="hidden items-center gap-8 text-sm uppercase tracking-[0.22em] text-[#f8efe2]/75 lg:flex">
+
+          <nav className="hidden items-center gap-8 text-xs uppercase tracking-[0.26em] text-[#f8efe2]/70 lg:flex">
             <a href="#collection" className="hover:text-[#d7b56d]">Collection</a>
             <a href="#craft" className="hover:text-[#d7b56d]">Craft</a>
+            <a href="#atelier" className="hover:text-[#d7b56d]">Atelier</a>
             <a href="#purchase" className="hover:text-[#d7b56d]">Purchase</a>
           </nav>
-          <button onClick={() => setCartOpen(true)} className="relative rounded-full border border-[#d7b56d]/40 p-3 hover:bg-[#d7b56d]/10">
+
+          <button
+            onClick={() => setCartOpen(true)}
+            className="relative rounded-full border border-[#d7b56d]/35 bg-white/[0.03] p-3 transition hover:bg-[#d7b56d]/10"
+          >
             <ShoppingBag size={20} />
-            {cart.length > 0 && <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#d7b56d] text-xs text-black">{cart.length}</span>}
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#d7b56d] text-xs font-bold text-black">
+                {cartCount}
+              </span>
+            )}
           </button>
         </div>
+
         {menuOpen && (
-          <div className="grid gap-4 border-t border-[#d7b56d]/20 px-5 py-4 text-sm uppercase tracking-[0.22em] lg:hidden">
-            <a href="#collection">Collection</a><a href="#craft">Craft</a><a href="#purchase">Purchase</a>
+          <div className="grid gap-4 border-t border-[#d7b56d]/15 px-5 py-4 text-sm uppercase tracking-[0.22em] lg:hidden">
+            <a href="#collection">Collection</a>
+            <a href="#craft">Craft</a>
+            <a href="#atelier">Atelier</a>
+            <a href="#purchase">Purchase</a>
           </div>
         )}
       </header>
 
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(215,181,109,.28),transparent_32%),linear-gradient(120deg,#0f0d0a_35%,rgba(70,38,20,.7))]" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-5 py-20 lg:grid-cols-2 lg:py-28">
-          <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <p className="mb-4 text-sm uppercase tracking-[0.45em] text-[#d7b56d]">Luxury Leather Studio</p>
-            <h2 className="font-serif text-5xl leading-tight md:text-7xl">Crafted for those who notice every detail.</h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[#f8efe2]/70">Premium leather bags, belts, footwear, and wallets with immersive product previews, elegant filtering, cart management, and a smooth purchase journey.</p>
+      <main className="relative z-10">
+        <section className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-[1fr_.9fr] lg:py-24">
+          <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ duration: 0.7 }}>
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#d7b56d]/25 bg-[#d7b56d]/10 px-4 py-2 text-xs uppercase tracking-[0.28em] text-[#d7b56d]">
+              <Sparkles size={15} /> Luxury Leather Studio
+            </div>
+            <h2 className="font-serif text-5xl leading-[1.02] md:text-7xl lg:text-8xl">
+              Quiet luxury, crafted in leather.
+            </h2>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[#f8efe2]/68">
+              Premium bags, belts, footwear, and wallets with interactive previews, luxury checkout, refined motion, and portfolio-ready e-commerce structure.
+            </p>
+
             <div className="mt-8 flex flex-wrap gap-4">
-              <Button onClick={() => document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" })} className="rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]">Explore Collection</Button>
-              <Button variant="outline" className="rounded-full border-[#d7b56d]/50 bg-transparent px-8 py-6 text-[#f8efe2] hover:bg-[#d7b56d]/10">Book Custom Order</Button>
+              <Button
+                onClick={() => document.getElementById("collection")?.scrollIntoView({ behavior: "smooth" })}
+                className="rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]"
+              >
+                Explore Collection <ChevronRight size={18} />
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full border-[#d7b56d]/50 bg-transparent px-8 py-6 text-[#f8efe2] hover:bg-[#d7b56d]/10"
+              >
+                Book Private Styling
+              </Button>
             </div>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="relative">
-            <div className="absolute -inset-4 rounded-[3rem] bg-[#d7b56d]/20 blur-2xl" />
-            <img src={selected.image} alt={selected.name} className="relative h-[520px] w-full rounded-[3rem] object-cover shadow-2xl" />
-            <div className="absolute bottom-6 left-6 right-6 rounded-3xl border border-white/10 bg-black/45 p-5 backdrop-blur-xl">
-              <p className="text-sm text-[#d7b56d]">Featured Piece</p>
-              <h3 className="font-serif text-2xl">{selected.name}</h3>
-              <p className="mt-1 text-[#f8efe2]/70">{formatPrice(selected.price)}</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
-      <section id="collection" className="mx-auto max-w-7xl px-5 py-20">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm uppercase tracking-[0.4em] text-[#d7b56d]">Interactive Display</p>
-            <h2 className="mt-3 font-serif text-4xl md:text-5xl">Signature Collection</h2>
-          </div>
-          <div className="flex items-center gap-3 rounded-full border border-[#d7b56d]/25 bg-white/5 px-4 py-3">
-            <Search size={18} className="text-[#d7b56d]" />
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search leather products" className="bg-transparent text-sm outline-none placeholder:text-[#f8efe2]/40" />
-          </div>
-        </div>
-
-        <div className="mt-8 flex flex-wrap gap-3">
-          {categories.map((cat) => (
-            <button key={cat} onClick={() => setActiveCategory(cat)} className={`rounded-full border px-5 py-2 text-sm transition ${activeCategory === cat ? "border-[#d7b56d] bg-[#d7b56d] text-black" : "border-[#d7b56d]/30 text-[#f8efe2]/70 hover:bg-[#d7b56d]/10"}`}>{cat}</button>
-          ))}
-        </div>
-
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredProducts.map((product) => (
-            <motion.div key={product.id} layout whileHover={{ y: -8 }}>
-              <Card className="overflow-hidden rounded-[2rem] border-[#d7b56d]/20 bg-[#17130f] text-[#f8efe2] shadow-xl">
-                <div className="group relative h-80 overflow-hidden">
-                  <img src={product.image} alt={product.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
-                  <div className="absolute left-4 top-4 rounded-full bg-black/55 px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#d7b56d] backdrop-blur">{product.tag}</div>
-                  <button className="absolute right-4 top-4 rounded-full bg-black/45 p-3 backdrop-blur hover:bg-[#d7b56d] hover:text-black"><Heart size={18} /></button>
+            <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
+              {[
+                ["4.9/5", "Client Rating"],
+                ["24h", "Dispatch"],
+                ["100%", "Leather Craft"],
+              ].map(([value, label]) => (
+                <div key={label} className="rounded-3xl border border-[#d7b56d]/15 bg-white/[0.04] p-4 text-center">
+                  <p className="font-serif text-2xl text-[#d7b56d]">{value}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-[#f8efe2]/45">{label}</p>
                 </div>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-serif text-2xl">{product.name}</h3>
-                    <span className="text-[#d7b56d]">{formatPrice(product.price)}</span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-sm text-[#f8efe2]/60">
-                    <span>{product.category} • {product.color}</span>
-                    <span className="flex items-center gap-1"><Star size={15} className="fill-current text-[#d7b56d]" /> {product.rating}</span>
-                  </div>
-                  <p className="mt-4 min-h-16 text-sm leading-6 text-[#f8efe2]/65">{product.desc}</p>
-                  <div className="mt-6 flex gap-3">
-                    <Button onClick={() => setSelected(product)} variant="outline" className="flex-1 rounded-full border-[#d7b56d]/40 bg-transparent text-[#f8efe2] hover:bg-[#d7b56d]/10">Preview</Button>
-                    <Button onClick={() => addToCart(product)} className="flex-1 rounded-full bg-[#d7b56d] text-black hover:bg-[#efd188]">Add Bag</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      <section id="craft" className="border-y border-[#d7b56d]/15 bg-[#17130f] py-20">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 md:grid-cols-3">
-          {[
-            [ShieldCheck, "Authentic Craft", "Full-grain leather, premium stitching, quality-checked finishing."],
-            [Truck, "Luxury Delivery", "Elegant packaging with tracked doorstep delivery across India."],
-            [CreditCard, "Secure Purchase", "Checkout-ready UI section with card, UPI, and COD style options."],
-          ].map(([Icon, title, text]) => (
-            <div key={title} className="rounded-[2rem] border border-[#d7b56d]/20 bg-black/20 p-8">
-              <Icon className="text-[#d7b56d]" size={34} />
-              <h3 className="mt-5 font-serif text-2xl">{title}</h3>
-              <p className="mt-3 text-[#f8efe2]/65">{text}</p>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </motion.div>
 
-      <section id="purchase" className="mx-auto grid max-w-7xl gap-10 px-5 py-20 lg:grid-cols-[1fr_.8fr]">
-        <div>
-          <p className="text-sm uppercase tracking-[0.4em] text-[#d7b56d]">Product Preview</p>
-          <h2 className="mt-3 font-serif text-4xl">{selected.name}</h2>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-[#f8efe2]/70">{selected.desc}</p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-3xl bg-white/5 p-5"><p className="text-[#d7b56d]">Material</p><p>Full-grain leather</p></div>
-            <div className="rounded-3xl bg-white/5 p-5"><p className="text-[#d7b56d]">Color</p><p>{selected.color}</p></div>
-            <div className="rounded-3xl bg-white/5 p-5"><p className="text-[#d7b56d]">Rating</p><p>{selected.rating}/5</p></div>
-          </div>
-        </div>
-        <div className="rounded-[2rem] border border-[#d7b56d]/20 bg-[#17130f] p-6">
-          <h3 className="font-serif text-3xl">Purchase Panel</h3>
-          <p className="mt-2 text-[#f8efe2]/60">Select your product and proceed to checkout.</p>
-          <div className="mt-6 flex items-center justify-between rounded-3xl bg-black/25 p-5">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, rotate: -1 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative"
+          >
+            <div className="absolute -inset-5 rounded-[3rem] bg-[#d7b56d]/20 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[3rem] border border-[#d7b56d]/20 bg-[#17130f] p-3 shadow-2xl">
+              <img src={selected.image} alt={selected.name} className="h-[520px] w-full rounded-[2.4rem] object-cover" />
+              <div className="absolute inset-x-8 bottom-8 rounded-[2rem] border border-white/10 bg-black/50 p-5 backdrop-blur-xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-[#d7b56d]">Featured Piece</p>
+                    <h3 className="mt-1 font-serif text-2xl">{selected.name}</h3>
+                    <p className="mt-1 text-sm text-[#f8efe2]/60">{selected.material} • {selected.color}</p>
+                  </div>
+                  <p className="text-xl text-[#d7b56d]">{formatPrice(selected.price)}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
+        <section id="collection" className="mx-auto max-w-7xl px-5 py-20">
+          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
-              <p className="text-sm text-[#f8efe2]/50">Selected item</p>
-              <p className="font-medium">{selected.name}</p>
+              <p className="text-sm uppercase tracking-[0.4em] text-[#d7b56d]">Interactive Display</p>
+              <h2 className="mt-3 font-serif text-4xl md:text-6xl">Signature Collection</h2>
             </div>
-            <p className="text-xl text-[#d7b56d]">{formatPrice(selected.price)}</p>
+            <div className="flex items-center gap-3 rounded-full border border-[#d7b56d]/25 bg-white/5 px-4 py-3">
+              <Search size={18} className="text-[#d7b56d]" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search products, colors..."
+                className="w-56 bg-transparent text-sm outline-none placeholder:text-[#f8efe2]/40"
+              />
+            </div>
           </div>
-          <Button onClick={() => addToCart(selected)} className="mt-6 w-full rounded-full bg-[#d7b56d] py-6 text-black hover:bg-[#efd188]">Add Selected Product to Cart <ChevronRight size={18} /></Button>
-        </div>
-      </section>
 
-      <footer className="border-t border-[#d7b56d]/15 px-5 py-10 text-center text-sm text-[#f8efe2]/50">
-        © 2026 Velora Leather Maison. Luxury-inspired custom e-commerce concept.
+          <div className="mt-8 flex flex-wrap gap-3">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`rounded-full border px-5 py-2 text-sm transition ${
+                  activeCategory === cat
+                    ? "border-[#d7b56d] bg-[#d7b56d] text-black"
+                    : "border-[#d7b56d]/30 text-[#f8efe2]/70 hover:bg-[#d7b56d]/10"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                layout
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ y: -8 }}
+              >
+                <Card className="group overflow-hidden rounded-[2rem] border-[#d7b56d]/20 bg-[#17130f] text-[#f8efe2] shadow-xl">
+                  <div className="relative h-80 overflow-hidden">
+                    <img src={product.image} alt={product.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent opacity-80" />
+                    <div className="absolute left-4 top-4 rounded-full bg-black/55 px-4 py-2 text-xs uppercase tracking-[0.2em] text-[#d7b56d] backdrop-blur">
+                      {product.tag}
+                    </div>
+                    <button className="absolute right-4 top-4 rounded-full bg-black/45 p-3 backdrop-blur transition hover:bg-[#d7b56d] hover:text-black">
+                      <Heart size={18} />
+                    </button>
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="font-serif text-2xl">{product.name}</h3>
+                      <span className="whitespace-nowrap text-[#d7b56d]">{formatPrice(product.price)}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-sm text-[#f8efe2]/60">
+                      <span>{product.category} • {product.color}</span>
+                      <span className="flex items-center gap-1">
+                        <Star size={15} className="fill-current text-[#d7b56d]" /> {product.rating}
+                      </span>
+                    </div>
+                    <p className="mt-4 min-h-16 text-sm leading-6 text-[#f8efe2]/65">{product.desc}</p>
+                    <div className="mt-6 flex gap-3">
+                      <Button
+                        onClick={() => {
+                          setSelected(product);
+                          setQuickView(product);
+                        }}
+                        variant="outline"
+                        className="flex-1 rounded-full border-[#d7b56d]/40 bg-transparent text-[#f8efe2] hover:bg-[#d7b56d]/10"
+                      >
+                        Quick View
+                      </Button>
+                      <Button onClick={() => addToCart(product)} className="flex-1 rounded-full bg-[#d7b56d] text-black hover:bg-[#efd188]">
+                        Add Bag
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        <section id="craft" className="border-y border-[#d7b56d]/15 bg-[#17130f]/85 py-20 backdrop-blur">
+          <div className="mx-auto max-w-7xl px-5">
+            <div className="max-w-2xl">
+              <p className="text-sm uppercase tracking-[0.4em] text-[#d7b56d]">The Promise</p>
+              <h2 className="mt-3 font-serif text-4xl md:text-5xl">Built like a luxury brand, structured like a real store.</h2>
+            </div>
+            <div className="mt-10 grid gap-6 md:grid-cols-4">
+              {[
+                [ShieldCheck, "Authentic Craft", "Full-grain leather with premium stitching and careful finishing."],
+                [Truck, "Luxury Delivery", "Tracked doorstep delivery with elegant packaging across India."],
+                [PackageCheck, "Easy Returns", "A clear return-ready structure for real e-commerce expansion."],
+                [Award, "Portfolio Grade", "Modern React, Tailwind, animation, cart, checkout, and deployment."],
+              ].map(([Icon, title, text]) => (
+                <div key={title} className="rounded-[2rem] border border-[#d7b56d]/20 bg-black/20 p-7">
+                  <Icon className="text-[#d7b56d]" size={34} />
+                  <h3 className="mt-5 font-serif text-2xl">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#f8efe2]/62">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="atelier" className="mx-auto grid max-w-7xl gap-8 px-5 py-20 lg:grid-cols-[.9fr_1.1fr]">
+          <div className="rounded-[2.5rem] border border-[#d7b56d]/20 bg-white/[0.04] p-8">
+            <Crown className="text-[#d7b56d]" size={42} />
+            <h2 className="mt-5 font-serif text-4xl">Private Atelier Experience</h2>
+            <p className="mt-4 leading-8 text-[#f8efe2]/65">
+              Add personalization, monogramming, exclusive colors, concierge support, and custom product requests for a premium customer experience.
+            </p>
+            <Button className="mt-8 rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]">Request Custom Order</Button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["Monogram Ready", "Customer initials and custom embossing flow."],
+              ["Razorpay Ready", "Checkout is structured for real payment gateway integration."],
+              ["Admin Future", "Product data can move to database/API later."],
+              ["Auto Deploy", "Connected with GitHub and Vercel production flow."],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-[2rem] border border-[#d7b56d]/15 bg-[#17130f] p-6">
+                <CheckCircle2 className="text-[#d7b56d]" />
+                <h3 className="mt-4 font-serif text-2xl">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#f8efe2]/60">{text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="purchase" className="mx-auto grid max-w-7xl gap-10 px-5 py-20 lg:grid-cols-[1fr_.8fr]">
+          <div>
+            <p className="text-sm uppercase tracking-[0.4em] text-[#d7b56d]">Product Preview</p>
+            <h2 className="mt-3 font-serif text-4xl md:text-5xl">{selected.name}</h2>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-[#f8efe2]/70">{selected.desc}</p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-3xl bg-white/5 p-5"><p className="text-[#d7b56d]">Material</p><p>{selected.material}</p></div>
+              <div className="rounded-3xl bg-white/5 p-5"><p className="text-[#d7b56d]">Color</p><p>{selected.color}</p></div>
+              <div className="rounded-3xl bg-white/5 p-5"><p className="text-[#d7b56d]">Rating</p><p>{selected.rating}/5</p></div>
+            </div>
+          </div>
+          <div className="rounded-[2rem] border border-[#d7b56d]/20 bg-[#17130f] p-6">
+            <h3 className="font-serif text-3xl">Purchase Panel</h3>
+            <p className="mt-2 text-[#f8efe2]/60">Select your product and proceed to checkout.</p>
+            <div className="mt-6 flex items-center justify-between rounded-3xl bg-black/25 p-5">
+              <div>
+                <p className="text-sm text-[#f8efe2]/50">Selected item</p>
+                <p className="font-medium">{selected.name}</p>
+              </div>
+              <p className="text-xl text-[#d7b56d]">{formatPrice(selected.price)}</p>
+            </div>
+            <Button onClick={() => addToCart(selected)} className="mt-6 w-full rounded-full bg-[#d7b56d] py-6 text-black hover:bg-[#efd188]">
+              Add Selected Product to Cart <ChevronRight size={18} />
+            </Button>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 pb-20">
+          <div className="rounded-[2.5rem] border border-[#d7b56d]/20 bg-[#d7b56d]/10 p-8 text-center md:p-12">
+            <p className="text-sm uppercase tracking-[0.4em] text-[#d7b56d]">Newsletter</p>
+            <h2 className="mt-3 font-serif text-4xl md:text-5xl">Receive private collection drops.</h2>
+            <div className="mx-auto mt-8 flex max-w-xl flex-col gap-3 rounded-full border border-[#d7b56d]/20 bg-black/30 p-2 sm:flex-row">
+              <input placeholder="Enter your email" className="flex-1 bg-transparent px-5 py-3 outline-none placeholder:text-[#f8efe2]/40" />
+              <Button className="rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]">Subscribe</Button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="relative z-10 border-t border-[#d7b56d]/15 px-5 py-10 text-center text-sm text-[#f8efe2]/50">
+        © 2026 Velora Leather Maison. Premium e-commerce concept built with React, Tailwind, Framer Motion, GitHub, and Vercel.
       </footer>
+
+      <AnimatePresence>
+        {quickView && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[55] grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
+            <motion.div initial={{ y: 30, scale: 0.96 }} animate={{ y: 0, scale: 1 }} exit={{ y: 30, scale: 0.96 }} className="grid w-full max-w-4xl overflow-hidden rounded-[2rem] border border-[#d7b56d]/25 bg-[#0f0d0a] text-[#f8efe2] shadow-2xl md:grid-cols-2">
+              <img src={quickView.image} alt={quickView.name} className="h-full min-h-[420px] w-full object-cover" />
+              <div className="p-7">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.3em] text-[#d7b56d]">{quickView.tag}</p>
+                    <h3 className="mt-3 font-serif text-4xl">{quickView.name}</h3>
+                  </div>
+                  <button onClick={() => setQuickView(null)} className="rounded-full border border-[#d7b56d]/30 p-2"><X /></button>
+                </div>
+                <p className="mt-5 leading-8 text-[#f8efe2]/65">{quickView.desc}</p>
+                <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-2xl bg-white/5 p-4"><span className="text-[#d7b56d]">Material</span><p>{quickView.material}</p></div>
+                  <div className="rounded-2xl bg-white/5 p-4"><span className="text-[#d7b56d]">Color</span><p>{quickView.color}</p></div>
+                  <div className="rounded-2xl bg-white/5 p-4"><span className="text-[#d7b56d]">Category</span><p>{quickView.category}</p></div>
+                  <div className="rounded-2xl bg-white/5 p-4"><span className="text-[#d7b56d]">Rating</span><p>{quickView.rating}/5</p></div>
+                </div>
+                <div className="mt-8 flex items-center justify-between">
+                  <p className="font-serif text-3xl text-[#d7b56d]">{formatPrice(quickView.price)}</p>
+                  <Button onClick={() => addToCart(quickView)} className="rounded-full bg-[#d7b56d] px-8 py-6 text-black hover:bg-[#efd188]">Add to Bag</Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {cartOpen && (
@@ -296,7 +516,7 @@ export default function LuxuryLeatherWebsite() {
               <h3 className="font-serif text-3xl">Shopping Bag</h3>
               <button onClick={() => setCartOpen(false)} className="rounded-full border border-[#d7b56d]/30 p-2"><X /></button>
             </div>
-            <div className="mt-8 space-y-5">
+            <div className="mt-8 max-h-[62vh] space-y-5 overflow-y-auto pr-1">
               {cart.length === 0 ? <p className="text-[#f8efe2]/55">Your luxury bag is empty.</p> : cart.map((item) => (
                 <div key={item.id} className="flex gap-4 rounded-3xl bg-white/5 p-4">
                   <img src={item.image} alt={item.name} className="h-24 w-24 rounded-2xl object-cover" />
